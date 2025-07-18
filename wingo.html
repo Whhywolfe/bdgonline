@@ -142,37 +142,31 @@ const db = firebase.database();
 const auth = firebase.auth();
 const firestore = firebase.firestore();
 
-let countdown = 30;
-let currentPeriod = BigInt(document.getElementById('period').innerText);
+let currentPeriod = null;
+let remaining = 30;
 const timerEl = document.getElementById("timer");
+const periodEl = document.getElementById("period");
 const lastResultsEl = document.getElementById("lastResults");
 const gameTableBody = document.querySelector("#gameHistory tbody");
-const betTableBody = document.querySelector("#betHistory tbody");
 
-let selectedBet = "";
 let betsThisPeriod = [];
 let betHistory = [];
 let currentWallet = 0;
 let userId = null;
 
-/* ✅ Auth + Firestore से balance load */
+/* ✅ Auth + Wallet Load */
 auth.onAuthStateChanged(async (user) => {
   if (!user) {
     window.location.href = "login.html";
     return;
   }
   userId = user.uid;
-
   const userDoc = await firestore.collection("users").doc(userId).get();
-  if (userDoc.exists) {
-    currentWallet = userDoc.data().balance || 0;
-  } else {
-    currentWallet = 0;
-  }
+  currentWallet = userDoc.exists ? (userDoc.data().balance || 0) : 0;
   refreshWallet();
 });
 
-/* ✅ Number Buttons */
+/* ✅ Number Buttons same */
 const topRow=document.getElementById("topRow"), bottomRow=document.getElementById("bottomRow");
 for(let i=0;i<=9;i++){
   const ball=document.createElement("div");
@@ -185,43 +179,82 @@ for(let i=0;i<=9;i++){
   if(i<5)topRow.appendChild(ball); else bottomRow.appendChild(ball);
 }
 
-async function updateTimer(){
-  if(countdown<=0){
+/* ✅ Global Timer Listener */
+db.ref("globalGame/30s").on("value", snap => {
+  if(!snap.exists()) return;
+  const data = snap.val();
+  currentPeriod = data.currentPeriod;
+  remaining = data.remaining;
+  periodEl.innerText = currentPeriod;
+});
+
+/* ✅ Firebase Timer Sync (1 sec) */
+setInterval(()=>{
+  if(remaining<=0){
+    generateOrFetchResult();
+  } else {
+    timerEl.innerText = "00:"+(remaining<10?"0":"")+remaining;
+    remaining--;
+  }
+},1000);
+
+/* ✅ Generate OR Fetch Result */
+async function generateOrFetchResult(){
+  // Already have result? skip
+  const resultSnap = await db.ref(`results/30s/${currentPeriod}`).once("value");
+  if(resultSnap.exists()) {
+    loadHistoryRow(currentPeriod, resultSnap.val());
+  } else {
+    // Manual check
     let winData=null;
     const manualSnap=await db.ref("manualResults/30s").once("value");
     if(manualSnap.exists()){
       winData=manualSnap.val();
       await db.ref("manualResults/30s").remove();
-    }else{
+    } else {
       const newNum=Math.floor(Math.random()*10);
       const color=newNum===0?"Violet":newNum%2===0?"Red":"Green";
       const size=newNum>=5?"Big":"Small";
-      winData={number:newNum,color,size};
+      winData={number:newNum,color,size,createdAt:Date.now()};
     }
-    const span=document.createElement("span");
-    span.className=winData.color.toLowerCase();
-    span.innerText=winData.number;
-    lastResultsEl.prepend(span);
-    if(lastResultsEl.childNodes.length>5)lastResultsEl.removeChild(lastResultsEl.lastChild);
-
-    const row=document.createElement("tr");
-    row.innerHTML=`<td>${currentPeriod}</td><td>${winData.number}</td><td>${winData.size}</td><td>${winData.color}</td>`;
-    gameTableBody.prepend(row);
-
-    await db.ref("results/30s/"+currentPeriod).set(winData);
-
+    await db.ref(`results/30s/${currentPeriod}`).set(winData);
+    loadHistoryRow(currentPeriod, winData);
     resolveBets(winData.number,winData.color,winData.size);
-
-    currentPeriod++;
-    document.getElementById("period").innerText=currentPeriod.toString();
-    betsThisPeriod=[];
-    countdown=30;
   }
-  timerEl.innerText="00:"+(countdown<10?"0":"")+countdown;
-  countdown--;
-}
-setInterval(updateTimer,1000);
 
+  // Next Period
+  const nextPeriod = String(BigInt(currentPeriod)+1n);
+  await db.ref("globalGame/30s").set({
+    currentPeriod: nextPeriod,
+    remaining: 30
+  });
+}
+
+/* ✅ Load History Row */
+function loadHistoryRow(period, winData){
+  const span=document.createElement("span");
+  span.className=winData.color.toLowerCase();
+  span.innerText=winData.number;
+  lastResultsEl.prepend(span);
+  if(lastResultsEl.childNodes.length>5) lastResultsEl.removeChild(lastResultsEl.lastChild);
+
+  const row=document.createElement("tr");
+  row.innerHTML=`<td>${period}</td><td>${winData.number}</td><td>${winData.size}</td><td>${winData.color}</td>`;
+  gameTableBody.prepend(row);
+}
+
+/* ✅ Fetch Last 50 History on load */
+async function fetchHistory(){
+  const histSnap=await db.ref("results/30s").orderByKey().limitToLast(50).once("value");
+  const data = histSnap.val()||{};
+  const keys = Object.keys(data).sort().reverse(); // latest first
+  keys.forEach(p=>{
+    loadHistoryRow(p,data[p]);
+  });
+}
+fetchHistory();
+
+/* ✅ Betting modal same */
 function refreshWallet(){
   document.getElementById("walletAmount").innerText="₹"+currentWallet.toFixed(2);
 }
@@ -232,7 +265,7 @@ function toggleHistory(type){
 function openBetModal(value,payout){
   selectedBet=value;
   document.getElementById("selectedValue").innerText=`${value} (Payout ${payout})`;
-  document.getElementById("selectedPeriod").innerText=currentPeriod.toString();
+  document.getElementById("selectedPeriod").innerText=currentPeriod;
   document.getElementById("modalWallet").innerText="₹"+currentWallet.toFixed(2);
   document.getElementById("betAmount").value="";
   document.getElementById("betModal").style.display="flex";
@@ -240,19 +273,17 @@ function openBetModal(value,payout){
 
 async function submitBet(){
   const amount=parseFloat(document.getElementById("betAmount").value);
-  if(isNaN(amount)||amount<=0)return;
+  if(isNaN(amount)||amount<=0) return;
   if(amount>currentWallet){alert("Not enough balance");return;}
 
   currentWallet-=amount;
   refreshWallet();
-
-  // ✅ Firestore balance update
   await firestore.collection("users").doc(userId).update({balance: currentWallet});
-
-  betsThisPeriod.push({period:currentPeriod.toString(),betOn:selectedBet,amount:amount});
+  betsThisPeriod.push({period:currentPeriod,betOn:selectedBet,amount:amount});
   document.getElementById("betModal").style.display="none";
 }
 
+/* ✅ Resolve Bets after result */
 function resolveBets(winNumber,winColor,winSize){
   let winStr=winNumber.toString();
   betsThisPeriod.forEach(async bet=>{
@@ -264,21 +295,16 @@ function resolveBets(winNumber,winColor,winSize){
     if(won){
       payout=bet.amount*mult;
       currentWallet+=payout;
-
-      // ✅ जीतने पर Firestore update
       await firestore.collection("users").doc(userId).update({balance: currentWallet});
-
       showNotif("win",`✅ You WON ₹${payout.toFixed(2)} (Period ${bet.period})`);
-    }else{
+    } else {
       showNotif("lose",`❌ You lost ₹${bet.amount.toFixed(2)} (Period ${bet.period})`);
     }
-
     const historyItem={period:bet.period,selection:bet.betOn,result:won?"Win":"Lose",payout:payout.toFixed(2)};
     betHistory.unshift(historyItem);
-
-    // ✅ Bet History भी Firestore में save
     await firestore.collection("users").doc(userId).collection("betHistory").doc(bet.period).set(historyItem);
   });
+  betsThisPeriod=[]; // clear after resolve
   refreshWallet(); renderBetHistory();
 }
 
@@ -298,8 +324,6 @@ function showNotif(type,msg){
   setTimeout(()=>div.classList.add("show"),50);
   setTimeout(()=>{div.classList.remove("show");setTimeout(()=>cont.removeChild(div),400);},3000);
 }
-
-refreshWallet();
 </script>
 </body>
 </html>
