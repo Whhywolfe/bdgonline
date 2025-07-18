@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Promotion - BDG GAME</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600&family=Poppins:wght@500&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      background: #121212;
+      font-family: 'Poppins', sans-serif;
+      color: #fff;
+    }
+    .bdg-title {
+      text-align: center;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 24px;
+      color: #ffd700;
+      margin-top: 15px;
+      position: relative;
+    }
+    .bdg-title::before, .bdg-title::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      width: 60px;
+      height: 2px;
+      background: linear-gradient(to right, transparent, #ffd700, transparent);
+    }
+    .bdg-title::before { left: 10px; }
+    .bdg-title::after { right: 10px; }
+    .welcome {
+      text-align: center;
+      font-size: 13px;
+      color: #ffcc00;
+      text-shadow: 0 0 8px #ffcc00;
+      margin-bottom: 15px;
+    }
+    .section-heading {
+      text-align: center;
+      font-size: 18px;
+      color: #ffd700;
+      margin: 10px 15px 5px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+    }
+    .section-msg {
+      text-align: center;
+      font-size: 13px;
+      color: #ccc;
+      margin: 0 20px 20px;
+    }
+    .promo-list {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      padding: 0 15px;
+    }
+    .promo-card {
+      background: #1e1e1e;
+      padding: 15px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
+    }
+    .promo-card i {
+      font-size: 20px;
+      color: #ffd700;
+      width: 28px;
+      text-align: center;
+    }
+    .promo-title {
+      font-size: 15px;
+      color: #fff;
+      font-weight: 500;
+    }
+    .footer-text {
+      text-align: center;
+      margin: 30px 20px 80px;
+      font-size: 18px;
+      font-weight: bold;
+      color: #ffd700;
+      text-shadow: 0 0 6px #ffcc00;
+      font-family: 'Orbitron', sans-serif;
+    }
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 60px;
+      background: #2e2e2e;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      border-top: 1px solid #333;
+      z-index: 1000;
+    }
+    .nav-item {
+      color: #ccc;
+      text-align: center;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .nav-item.active {
+      color: #ffd700;
+    }
+    .nav-item i {
+      display: block;
+      font-size: 18px;
+      margin-bottom: 2px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Title -->
+  <div class="bdg-title">BDG GAME</div>
+  <div class="welcome">WELCOME TO BDG GAME</div>
+
+  <!-- Heading -->
+  <div class="section-heading"><i class="fas fa-gift"></i> Promotion</div>
+  <div class="section-msg">
+    Check out the latest promotions and offers below!
+  </div>
+
+  <!-- Promotions -->
+  <div class="promo-list">
+    <div class="promo-card">
+      <i class="fas fa-coins"></i>
+      <div class="promo-title">First Recharge Bonus</div>
+    </div>
+    <div class="promo-card">
+      <i class="fas fa-calendar-check"></i>
+      <div class="promo-title">Daily Login Reward</div>
+    </div>
+    <div class="promo-card">
+      <i class="fas fa-users"></i>
+      <div class="promo-title">Referral Program</div>
+    </div>
+  </div>
+
+  <!-- Footer Tagline -->
+  <div class="footer-text">Exclusive Deals For Smart Players</div>
+
+  <!-- Bottom Navigation -->
+  <div class="bottom-nav">
+    <div class="nav-item" onclick="window.location.href='index.html'">
+      <i class="fas fa-home"></i>Home
+    </div>
+    <div class="nav-item" onclick="window.location.href='activity.html'">
+      <i class="fas fa-chart-line"></i>Activity
+    </div>
+    <div class="nav-item active">
+      <i class="fas fa-gift"></i>Promotion
+    </div>
+    <div class="nav-item" onclick="window.location.href='wallet.html'">
+      <i class="fas fa-wallet"></i>Wallet
+    </div>
+    <div class="nav-item" onclick="window.location.href='account.html'">
+      <i class="fas fa-user"></i>Account
+    </div>
+  </div>
+
+  <!-- Firebase Auth Check -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCBE6_qVOGSigbw-pLyHhLBVdV6rpvnfn0",
+      authDomain: "bdggame-a9c98.firebaseapp.com",
+      projectId: "bdggame-a9c98",
+      storageBucket: "bdggame-a9c98.appspot.com",
+      messagingSenderId: "79394469856",
+      appId: "1:79394469856:web:72cec76208846251e01d85",
+      measurementId: "G-KM7RLYQHFE"
+    };
+    firebase.initializeApp(firebaseConfig);
+    firebase.auth().onAuthStateChanged(user => {
+      if (!user) {
+        window.location.href = "login.html";
+      }
+    });
+  </script>
+
+</body>
+</html>
