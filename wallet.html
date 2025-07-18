@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Wallet - BDG GAME</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600&family=Poppins:wght@500&display=swap" rel="stylesheet" />
+  <style>
+    body { margin: 0; background: #121212; font-family: 'Poppins', sans-serif; color: #fff; }
+    .bdg-title { text-align: center; font-family: 'Orbitron', sans-serif; font-size: 24px; color: #ffd700; margin-top: 15px; position: relative; }
+    .bdg-title::before, .bdg-title::after { content: ''; position: absolute; top: 50%; width: 60px; height: 2px; background: linear-gradient(to right, transparent, #ffd700, transparent); }
+    .bdg-title::before { left: 10px; }
+    .bdg-title::after { right: 10px; }
+    .wallet-balance { text-align: center; margin-top: 10px; }
+    .wallet-balance i { font-size: 36px; color: #ffd700; }
+    .wallet-balance h2 { margin: 5px 0; font-size: 24px; color: #fff; }
+    .wallet-boxes { display: flex; justify-content: space-around; margin: 20px 15px 10px; gap: 10px; }
+    .wallet-card { background: #1e1e1e; border-radius: 12px; padding: 10px; flex: 1; text-align: center; }
+    .wallet-card p { margin: 5px 0; font-size: 13px; }
+    .wallet-card .value { font-size: 14px; font-weight: bold; color: #ffd700; }
+    .transfer-btn { margin: 10px 15px; background: linear-gradient(to right, #ffdd57, #c7a100); color: #000; text-align: center; padding: 10px; border-radius: 25px; font-weight: bold; font-size: 14px; cursor: pointer; }
+    .action-buttons { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; padding: 10px 15px; }
+    .action-button { background: #1e1e1e; padding: 12px; text-align: center; border-radius: 10px; cursor: pointer; }
+    .action-button i { font-size: 20px; color: #ffd700; margin-bottom: 5px; }
+    .action-button span { display: block; font-size: 12px; color: #fff; }
+    .form-section { display: none; background: #1e1e1e; margin: 10px 15px; padding: 15px; border-radius: 12px; }
+    .form-section input { width: 100%; margin-bottom: 10px; padding: 8px; border: none; border-radius: 6px; font-size: 13px; color: #000; }
+    .form-section button { background: linear-gradient(to right, #ffdd57, #c7a100); color: #000; font-weight: bold; padding: 10px; width: 100%; border: none; border-radius: 6px; cursor: pointer; }
+    .history-table { font-size: 13px; max-height: 250px; overflow-y: auto; color: #ccc; }
+    .history-table table { width: 100%; border-collapse: collapse; }
+    .history-table th, .history-table td { padding: 8px; border-bottom: 1px solid #333; text-align: left; }
+    .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; height: 60px; background: #2e2e2e; display: flex; justify-content: space-around; align-items: center; border-top: 1px solid #333; z-index: 1000; }
+    .nav-item { color: #ccc; text-align: center; font-size: 12px; cursor: pointer; }
+    .nav-item.active { color: #ffd700; }
+    .nav-item i { display: block; font-size: 18px; margin-bottom: 2px; }
+  </style>
+</head>
+<body>
+
+  <div class="bdg-title">BDG GAME</div>
+
+  <div class="wallet-balance">
+    <i class="fas fa-wallet"></i>
+    <h2 id="balance">₹0.00</h2>
+  </div>
+
+  <div class="wallet-boxes">
+    <div class="wallet-card">
+      <p>Main Wallet</p>
+      <div class="value" id="mainWallet">₹0.00</div>
+    </div>
+    <div class="wallet-card">
+      <p>3rd Party Wallet</p>
+      <div class="value" id="thirdWallet">₹0.00</div>
+    </div>
+  </div>
+
+  <div class="transfer-btn" onclick="transferBalance()">Main Wallet Transfer</div>
+
+  <div class="action-buttons">
+    <div class="action-button" onclick="toggleForm('depositForm')">
+      <i class="fas fa-arrow-down"></i><span>Deposit</span>
+    </div>
+    <div class="action-button" onclick="toggleForm('withdrawForm')">
+      <i class="fas fa-arrow-up"></i><span>Withdraw</span>
+    </div>
+    <div class="action-button" onclick="toggleForm('depositHistory')">
+      <i class="fas fa-file-alt"></i><span>Deposit History</span>
+    </div>
+    <div class="action-button" onclick="toggleForm('withdrawHistory')">
+      <i class="fas fa-file-invoice-dollar"></i><span>Withdraw History</span>
+    </div>
+  </div>
+
+  <!-- ✅ Deposit Form -->
+  <div class="form-section" id="depositForm">
+    <div id="paymentDetails" style="background:#222; padding:10px; border-radius:8px; margin-bottom:10px; font-size:14px; color:#ffd700;">
+      <b>Loading Payment Details...</b>
+    </div>
+    <input id="depositAmount" type="number" min="1" placeholder="Enter Amount" required />
+    <input id="depositUtr" type="text" placeholder="Enter UTR Number" required />
+    <input id="depositScreenshot" type="file" accept="image/*" required />
+    <button onclick="submitDeposit()">Submit Deposit</button>
+    <p id="depositMsg" style="color:lightgreen;"></p>
+  </div>
+
+  <!-- ✅ Withdraw Form -->
+  <div class="form-section" id="withdrawForm">
+    <input id="withdrawAmount" type="number" min="1" placeholder="Enter Amount" required />
+    <input id="withdrawAccount" type="text" placeholder="Account Number" required />
+    <input id="withdrawIfsc" type="text" placeholder="IFSC Code" required />
+    <input id="withdrawBank" type="text" placeholder="Bank Name" required />
+    <input id="withdrawName" type="text" placeholder="Customer Name" required />
+    <button onclick="submitWithdraw()">Submit Withdraw</button>
+    <p id="withdrawMsg" style="color:lightgreen;"></p>
+  </div>
+
+  <!-- ✅ Deposit History -->
+  <div class="form-section history-table" id="depositHistory">
+    <table>
+      <thead><tr><th>Amount</th><th>UTR</th><th>Date</th></tr></thead>
+      <tbody id="depositHistoryBody"></tbody>
+    </table>
+  </div>
+
+  <!-- ✅ Withdraw History -->
+  <div class="form-section history-table" id="withdrawHistory">
+    <table>
+      <thead><tr><th>Amount</th><th>Account</th><th>Date</th></tr></thead>
+      <tbody id="withdrawHistoryBody"></tbody>
+    </table>
+  </div>
+
+  <!-- Bottom Nav -->
+  <div class="bottom-nav">
+    <div class="nav-item" onclick="window.location.href='index.html'"><i class="fas fa-home"></i>Home</div>
+    <div class="nav-item" onclick="window.location.href='activity.html'"><i class="fas fa-chart-line"></i>Activity</div>
+    <div class="nav-item" onclick="window.location.href='promotion.html'"><i class="fas fa-gift"></i>Promotion</div>
+    <div class="nav-item active"><i class="fas fa-wallet"></i>Wallet</div>
+    <div class="nav-item" onclick="window.location.href='account.html'"><i class="fas fa-user"></i>Account</div>
+  </div>
+
+  <!-- ✅ Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCNrrHD6S8540Rbd7iyqP1fPk6Wc7NpQCg",
+      authDomain: "bdgonline-a20f8.firebaseapp.com",
+      projectId: "bdgonline-a20f8",
+      storageBucket: "bdgonline-a20f8.appspot.com",
+      databaseURL: "https://bdgonline-a20f8-default-rtdb.asia-southeast1.firebasedatabase.app",
+      messagingSenderId: "783742260288",
+      appId: "1:783742260288:web:bc8de084be768dedee7ba5"
+    };
+    firebase.initializeApp(firebaseConfig);
+
+    const auth = firebase.auth();
+    const firestore = firebase.firestore();
+    const storage = firebase.storage();
+    const rtdb = firebase.database();
+
+    let currentUser;
+
+    function toggleForm(id) {
+      const forms = ['depositForm', 'withdrawForm', 'depositHistory', 'withdrawHistory'];
+      forms.forEach(f => {
+        document.getElementById(f).style.display = f === id && document.getElementById(f).style.display !== 'block' ? 'block' : 'none';
+      });
+    }
+
+    function transferBalance() { alert("Transfer function coming soon"); }
+
+    auth.onAuthStateChanged(user => {
+      if (!user) { window.location.href = "login.html"; return; }
+      currentUser = user;
+      loadWalletBalance();
+      loadPaymentDetails();
+    });
+
+    async function loadWalletBalance() {
+      const doc = await firestore.collection("users").doc(currentUser.uid).get();
+      if (doc.exists) {
+        const data = doc.data();
+        const mainBal = data.balance || 0;
+        document.getElementById("balance").innerText = `₹${mainBal.toFixed(2)}`;
+        document.getElementById("mainWallet").innerText = `₹${mainBal.toFixed(2)}`;
+        document.getElementById("thirdWallet").innerText = `₹0.00`;
+      }
+    }
+
+    // ✅ Admin Panel से live payment details load
+    function loadPaymentDetails() {
+      rtdb.ref("paymentSettings").on("value", snap => {
+        const data = snap.val() || {};
+        document.getElementById("paymentDetails").innerHTML = `
+          <b>Payment Details:</b><br>
+          <b>UPI:</b> ${data.upi || '-'}<br>
+          <b>Bank:</b> ${data.bankName || '-'}<br>
+          <b>Account:</b> ${data.accountNumber || '-'}<br>
+          <b>IFSC:</b> ${data.ifsc || '-'}
+        `;
+      });
+    }
+
+    // ✅ Deposit Request Submit + Screenshot Upload
+    async function submitDeposit() {
+      const amount = parseFloat(document.getElementById("depositAmount").value);
+      const utr = document.getElementById("depositUtr").value.trim();
+      const file = document.getElementById("depositScreenshot").files[0];
+      const msg = document.getElementById("depositMsg");
+
+      if (!amount || !utr || !file) {
+        msg.style.color = "red"; msg.innerText = "Please fill all fields!"; return;
+      }
+
+      msg.style.color = "yellow"; msg.innerText = "Uploading screenshot...";
+
+      const storageRef = storage.ref(`deposits/${currentUser.uid}/${Date.now()}_${file.name}`);
+      await storageRef.put(file);
+      const screenshotUrl = await storageRef.getDownloadURL();
+
+      const depositData = {
+        uid: currentUser.uid,
+        email: currentUser.email,
+        amount,
+        utr,
+        screenshot: screenshotUrl,
+        status: "pending",
+        createdAt: Date.now()
+      };
+
+      // ✅ RTDB में Save ताकि Admin Panel पर दिखे
+      await rtdb.ref("depositRequests").push(depositData);
+
+      msg.style.color = "lightgreen";
+      msg.innerText = "✅ Deposit request submitted!";
+      document.getElementById("depositAmount").value = "";
+      document.getElementById("depositUtr").value = "";
+      document.getElementById("depositScreenshot").value = "";
+    }
+
+    // ✅ Withdraw Request Submit
+    async function submitWithdraw() {
+      const amount = parseFloat(document.getElementById("withdrawAmount").value);
+      const account = document.getElementById("withdrawAccount").value.trim();
+      const ifsc = document.getElementById("withdrawIfsc").value.trim();
+      const bank = document.getElementById("withdrawBank").value.trim();
+      const name = document.getElementById("withdrawName").value.trim();
+      const msg = document.getElementById("withdrawMsg");
+
+      if (!amount || !account || !ifsc || !bank || !name) {
+        msg.style.color = "red"; msg.innerText = "Please fill all fields!"; return;
+      }
+
+      msg.style.color = "yellow"; msg.innerText = "Submitting withdrawal...";
+
+      const withdrawData = {
+        uid: currentUser.uid,
+        email: currentUser.email,
+        amount,
+        accountNumber: account,
+        ifsc,
+        bankName: bank,
+        accountHolder: name,
+        status: "pending",
+        createdAt: Date.now()
+      };
+
+      // ✅ RTDB में Save ताकि Admin Panel पर दिखे
+      await rtdb.ref("withdrawalRequests").push(withdrawData);
+
+      msg.style.color = "lightgreen";
+      msg.innerText = "✅ Withdrawal request submitted!";
+      document.getElementById("withdrawAmount").value = "";
+      document.getElementById("withdrawAccount").value = "";
+      document.getElementById("withdrawIfsc").value = "";
+      document.getElementById("withdrawBank").value = "";
+      document.getElementById("withdrawName").value = "";
+    }
+  </script>
+</body>
+</html>
