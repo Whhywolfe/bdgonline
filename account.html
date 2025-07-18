@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>BDG GAME - Account</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600&family=Poppins:wght@500&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      background: #121212;
+      font-family: 'Poppins', sans-serif;
+      color: #fff;
+    }
+
+    .profile {
+      background: linear-gradient(to right, #ffd700, #c7a100);
+      padding: 20px;
+      text-align: center;
+      color: #000;
+    }
+
+    .profile img {
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      margin-bottom: 8px;
+    }
+
+    .profile h2 {
+      font-family: 'Orbitron', sans-serif;
+      margin: 0;
+      font-size: 16px;
+      color: #000;
+    }
+
+    .vip-badge {
+      background: #fff;
+      color: #000;
+      padding: 2px 6px;
+      font-size: 10px;
+      border-radius: 8px;
+      margin-left: 5px;
+      font-weight: bold;
+    }
+
+    .uid-box {
+      background: #ffb300;
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      color: black;
+      margin-top: 6px;
+    }
+
+    .balance-box {
+      background: #1e1e1e;
+      margin: -25px 15px 15px;
+      border-radius: 12px;
+      padding: 15px;
+      text-align: center;
+    }
+
+    .balance-box h3 {
+      margin: 0;
+      font-size: 18px;
+      color: #ffd700;
+    }
+
+    .balance-box .refresh {
+      font-size: 14px;
+      margin-left: 10px;
+      cursor: pointer;
+      color: #ccc;
+    }
+
+    .wallet-grid {
+      display: flex;
+      justify-content: space-around;
+      margin-top: 15px;
+    }
+
+    .wallet-grid .item {
+      text-align: center;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .wallet-grid .item i {
+      font-size: 22px;
+      margin-bottom: 6px;
+      display: block;
+      color: #ffd700;
+    }
+
+    .section {
+      background: #1e1e1e;
+      margin: 10px 15px;
+      border-radius: 12px;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+    }
+
+    .section i {
+      margin-right: 10px;
+      color: #ffd700;
+    }
+
+    .badge {
+      background: red;
+      color: white;
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 50px;
+    }
+
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 60px;
+      background: #2e2e2e;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      border-top: 1px solid #333;
+    }
+
+    .nav-item {
+      color: #ccc;
+      text-align: center;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .nav-item.active {
+      color: #ffd700;
+    }
+
+    .nav-item i {
+      display: block;
+      font-size: 18px;
+      margin-bottom: 2px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Profile -->
+  <div class="profile">
+    <img src="https://i.pravatar.cc/100?img=5" alt="Profile">
+    <h2 id="username">Loading... <span class="vip-badge">VIP</span></h2>
+    <div class="uid-box" id="uid">UID | -----</div>
+  </div>
+
+  <!-- Balance -->
+  <div class="balance-box">
+    <h3 id="walletBalance">₹0.00 <span class="refresh" onclick="fetchBalance()"><i class="fas fa-sync-alt"></i></span></h3>
+    <div class="wallet-grid">
+      <div class="item"><i class="fas fa-wallet"></i>ARWallet</div>
+      <div class="item" onclick="location.href='wallet.html'"><i class="fas fa-arrow-down"></i>Deposit</div>
+      <div class="item" onclick="location.href='wallet.html'"><i class="fas fa-arrow-up"></i>Withdraw</div>
+      <div class="item"><i class="fas fa-crown"></i>VIP</div>
+    </div>
+  </div>
+
+  <!-- Sections -->
+  <div class="section"><div><i class="fas fa-history"></i>Game History</div></div>
+  <div class="section"><div><i class="fas fa-receipt"></i>Transaction History</div></div>
+  <div class="section"><div><i class="fas fa-bell"></i>Notification</div><span class="badge">8</span></div>
+  <div class="section"><div><i class="fas fa-gift"></i>Gifts</div></div>
+  <div class="section"><div><i class="fas fa-chart-bar"></i>Game Stats</div></div>
+  <div class="section"><div><i class="fas fa-language"></i>Language</div><div>English</div></div>
+
+  <!-- Bottom Navigation -->
+  <div class="bottom-nav">
+    <div class="nav-item" onclick="location.href='home.html'"><i class="fas fa-home"></i>Home</div>
+    <div class="nav-item" onclick="location.href='activity.html'"><i class="fas fa-chart-line"></i>Activity</div>
+    <div class="nav-item" onclick="location.href='promotion.html'"><i class="fas fa-gift"></i>Promotion</div>
+    <div class="nav-item" onclick="location.href='wallet.html'"><i class="fas fa-wallet"></i>Wallet</div>
+    <div class="nav-item active"><i class="fas fa-user"></i>Account</div>
+  </div>
+
+  <!-- Firebase Scripts -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCBE6_qVOGSigbw-pLyHhLBVdV6rpvnfn0",
+      authDomain: "bdggame-a9c98.firebaseapp.com",
+      projectId: "bdggame-a9c98",
+      storageBucket: "bdggame-a9c98.appspot.com",
+      messagingSenderId: "79394469856",
+      appId: "1:79394469856:web:72cec76208846251e01d85",
+      measurementId: "G-KM7RLYQHFE"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    auth.onAuthStateChanged(async (user) => {
+      if (!user) return window.location.href = "login.html";
+      const uid = user.uid;
+      document.getElementById("uid").innerText = `UID | ${uid}`;
+      document.getElementById("username").innerHTML = `${user.phoneNumber || "User"} <span class="vip-badge">VIP</span>`;
+      fetchBalance(uid);
+    });
+
+    async function fetchBalance(uid) {
+      const uidElement = document.getElementById("uid");
+      const id = uid || (auth.currentUser && auth.currentUser.uid);
+      if (!id) return;
+
+      const userRef = db.collection("users").doc(id);
+      const doc = await userRef.get();
+      const data = doc.exists ? doc.data() : { balance: 0 };
+      document.getElementById("walletBalance").innerHTML = `₹${data.balance.toFixed(2)} <span class="refresh" onclick="fetchBalance()"><i class="fas fa-sync-alt"></i></span>`;
+    }
+  </script>
+
+</body>
+</html>
