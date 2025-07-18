@@ -270,7 +270,6 @@
   </div>
 
 </div>
-
 <script>
   const firebaseConfig = {
     apiKey: "AIzaSyCNrrHD6S8540Rbd7iyqP1fPk6Wc7NpQCg",
@@ -280,6 +279,8 @@
     messagingSenderId: "783742260288",
     appId: "1:783742260288:web:bc8de084be768dedee7ba5"
   };
+
+  // ✅ Firebase init
   firebase.initializeApp(firebaseConfig);
   const auth = firebase.auth();
   const db = firebase.firestore();
@@ -429,6 +430,6 @@
   window.onload = () => {
     switchTab(document.querySelector('.tab.active'), 'all');
   };
-</script>
+       </script>
 </body>
 </html>
