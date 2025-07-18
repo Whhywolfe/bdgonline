@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>BDG GAME</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600&family=Poppins:wght@500&display=swap" rel="stylesheet">
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
+  <style>
+    body {
+      margin: 0;
+      background: #0d0d0d;
+      font-family: 'Poppins', sans-serif;
+      color: #fff;
+    }
+    .hidden { display: none; }
+
+    /* ✅ AUTH Section */
+    .auth-container {
+      text-align: center;
+      padding: 20px;
+    }
+    .auth-tabs {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+    .auth-tab {
+      flex: 1;
+      padding: 10px;
+      cursor: pointer;
+      background: #111;
+      color: #aaa;
+    }
+    .auth-tab.active {
+      background: #FFD700;
+      color: #000;
+      font-weight: bold;
+    }
+    .auth-form {
+      margin-top: 10px;
+    }
+    input {
+      padding: 10px;
+      margin: 10px 0;
+      width: 250px;
+      border-radius: 8px;
+      border: 1px solid #FFD700;
+      background: #111;
+      color: #fff;
+    }
+    button {
+      padding: 10px 20px;
+      border-radius: 8px;
+      border: none;
+      background: #FFD700;
+      color: #000;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    /* ✅ DASHBOARD (Same as before) */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 16px;
+      background: #111;
+      border-bottom: 2px solid #FFD700;
+    }
+    .btn-gold {
+      background: #FFD700;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 6px;
+      font-weight: bold;
+      color: #000;
+      cursor: pointer;
+    }
+    .bdg-title {
+      text-align: center;
+      font-size: 28px;
+      color: #FFD700;
+      font-family: 'Orbitron', sans-serif;
+      margin-top: 10px;
+    }
+    .welcome {
+      text-align: center;
+      font-size: 14px;
+      color: #aaa;
+      margin-bottom: 10px;
+    }
+    .game-section {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-around;
+      padding: 10px 8px;
+      gap: 12px;
+    }
+    .game-icon {
+      background: #222;
+      padding: 10px;
+      border-radius: 8px;
+      text-align: center;
+      font-size: 13px;
+      color: #FFD700;
+      width: 80px;
+    }
+    .tabs {
+      display: flex;
+      justify-content: space-around;
+      background: #1a1a1a;
+      padding: 10px 0;
+    }
+    .tab {
+      color: #aaa;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .tab.active {
+      color: #FFD700;
+      border-bottom: 2px solid #FFD700;
+    }
+    .game-grid {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-around;
+      padding: 10px;
+    }
+    .game-card {
+      background: #111;
+      border: 1px solid #333;
+      color: #fff;
+      padding: 16px;
+      border-radius: 8px;
+      text-align: center;
+      margin: 10px;
+      width: 100px;
+      cursor: pointer;
+    }
+    .game-card i {
+      font-size: 24px;
+      color: #FFD700;
+    }
+    .game-title {
+      margin-top: 8px;
+      font-weight: bold;
+      font-size: 14px;
+    }
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: space-around;
+      background: #1a1a1a;
+      padding: 8px 0;
+      border-top: 2px solid #FFD700;
+    }
+    .nav-item {
+      color: #aaa;
+      text-align: center;
+      font-size: 12px;
+    }
+    .nav-item.active {
+      color: #FFD700;
+    }
+    .nav-item i {
+      display: block;
+      font-size: 18px;
+      margin-bottom: 4px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ✅ AUTH SECTION -->
+<div id="authSection" class="auth-container">
+  <h2>Welcome to BDG GAME</h2>
+  <div class="auth-tabs">
+    <div class="auth-tab active" onclick="switchAuthTab('login')">Login</div>
+    <div class="auth-tab" onclick="switchAuthTab('register')">Register</div>
+  </div>
+
+  <!-- LOGIN FORM -->
+  <div id="loginForm" class="auth-form">
+    <input type="text" id="loginPhone" placeholder="+91XXXXXXXXXX"><br>
+    <div id="recaptcha-login"></div><br>
+    <button onclick="sendOTP('login')">Send OTP</button><br>
+    <div id="loginOtpDiv" style="display:none;">
+      <input type="text" id="loginOtp" placeholder="Enter OTP"><br>
+      <button onclick="verifyOTP('login')">Verify OTP</button>
+    </div>
+  </div>
+
+  <!-- REGISTER FORM -->
+  <div id="registerForm" class="auth-form hidden">
+    <input type="text" id="regName" placeholder="Full Name"><br>
+    <input type="text" id="regReferral" placeholder="Referral Code (optional)"><br>
+    <input type="text" id="regPhone" placeholder="+91XXXXXXXXXX"><br>
+    <div id="recaptcha-register"></div><br>
+    <button onclick="sendOTP('register')">Send OTP</button><br>
+    <div id="registerOtpDiv" style="display:none;">
+      <input type="text" id="registerOtp" placeholder="Enter OTP"><br>
+      <button onclick="verifyOTP('register')">Verify & Register</button>
+    </div>
+  </div>
+</div>
+
+<!-- ✅ DASHBOARD SECTION -->
+<div id="dashboardSection" class="hidden">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-left"></div>
+    <button class="btn-gold" onclick="logoutUser()">Logout</button>
+  </div>
+
+  <!-- BDG Logo + Welcome -->
+  <div class="bdg-title">BDG GAME</div>
+  <div class="welcome">WELCOME TO BDG GAME</div>
+
+  <!-- Game Categories -->
+  <div class="game-section">
+    <div class="game-icon"><i class="fas fa-ticket-alt"></i>Lottery</div>
+    <div class="game-icon"><i class="fas fa-dice"></i>Originals</div>
+    <div class="game-icon"><i class="fas fa-sliders-h"></i>Slots</div>
+    <div class="game-icon"><i class="fas fa-futbol"></i>Sports</div>
+    <div class="game-icon"><i class="fas fa-fire"></i>Popular</div>
+    <div class="game-icon"><i class="fas fa-chess-king"></i>Casino</div>
+    <div class="game-icon"><i class="fas fa-heart"></i>Rummy</div>
+    <div class="game-icon"><i class="fas fa-fish"></i>Fishing</div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab(this, 'all')">All</div>
+    <div class="tab" onclick="switchTab(this, 'wingo')">Win Go</div>
+    <div class="tab" onclick="switchTab(this, 'trx')">Trx Win</div>
+    <div class="tab" onclick="switchTab(this, 'k3')">K3</div>
+  </div>
+
+  <!-- Game Grid -->
+  <div class="game-grid" id="gameGrid"></div>
+
+  <!-- Bottom Navigation -->
+  <div class="bottom-nav">
+    <div class="nav-item active" onclick="switchNav(this)">
+      <i class="fas fa-home"></i>Home
+    </div>
+    <div class="nav-item" onclick="switchNav(this)">
+      <i class="fas fa-chart-line"></i>Activity
+    </div>
+    <div class="nav-item" onclick="switchNav(this)">
+      <i class="fas fa-gift"></i>Promotion
+    </div>
+    <div class="nav-item" onclick="switchNav(this)">
+      <i class="fas fa-wallet"></i>Wallet
+    </div>
+    <div class="nav-item" onclick="switchNav(this)">
+      <i class="fas fa-user"></i>Account
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyCBE6_qVOGSigbw-pLyHhLBVdV6rpvnfn0",
+    authDomain: "bdggame-a9c98.firebaseapp.com",
+    projectId: "bdggame-a9c98",
+    storageBucket: "bdggame-a9c98.appspot.com",
+    messagingSenderId: "79394469856",
+    appId: "1:79394469856:web:72cec76208846251e01d85",
+    measurementId: "G-KM7RLYQHFE"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+
+  let confirmationResultLogin, confirmationResultRegister;
+
+  // ✅ Auth state check
+  auth.onAuthStateChanged(user => {
+    if (user) {
+      document.getElementById("authSection").classList.add("hidden");
+      document.getElementById("dashboardSection").classList.remove("hidden");
+    } else {
+      document.getElementById("authSection").classList.remove("hidden");
+      document.getElementById("dashboardSection").classList.add("hidden");
+    }
+  });
+
+  // ✅ Switch Login/Register Tab
+  function switchAuthTab(tab) {
+    document.querySelectorAll(".auth-tab").forEach(el=>el.classList.remove("active"));
+    document.querySelectorAll(".auth-form").forEach(el=>el.classList.add("hidden"));
+    if (tab === "login") {
+      document.querySelector(".auth-tab:nth-child(1)").classList.add("active");
+      document.getElementById("loginForm").classList.remove("hidden");
+    } else {
+      document.querySelector(".auth-tab:nth-child(2)").classList.add("active");
+      document.getElementById("registerForm").classList.remove("hidden");
+    }
+  }
+
+  // ✅ OTP Send
+  function sendOTP(type){
+    let phone;
+    let recaptchaId;
+    if(type==="login"){
+      phone=document.getElementById("loginPhone").value.trim();
+      recaptchaId="recaptcha-login";
+    } else {
+      phone=document.getElementById("regPhone").value.trim();
+      recaptchaId="recaptcha-register";
+    }
+    if(!phone.startsWith("+91") || phone.length!==13){
+      alert("Enter valid +91XXXXXXXXXX");
+      return;
+    }
+    const verifier=new firebase.auth.RecaptchaVerifier(recaptchaId,{size:"normal"});
+    auth.signInWithPhoneNumber(phone,verifier).then(result=>{
+      if(type==="login") {
+        confirmationResultLogin=result;
+        document.getElementById("loginOtpDiv").style.display="block";
+      } else {
+        confirmationResultRegister=result;
+        document.getElementById("registerOtpDiv").style.display="block";
+      }
+      alert("OTP sent!");
+    }).catch(e=>alert(e.message));
+  }
+
+  // ✅ OTP Verify
+  function verifyOTP(type){
+    const otp=(type==="login")?document.getElementById("loginOtp").value.trim():document.getElementById("registerOtp").value.trim();
+    let confirmObj=(type==="login")?confirmationResultLogin:confirmationResultRegister;
+    confirmObj.confirm(otp).then(res=>{
+      const user=res.user;
+      if(type==="register"){
+        const name=document.getElementById("regName").value.trim();
+        const ref=document.getElementById("regReferral").value.trim();
+        db.collection("users").doc(user.uid).set({
+          name:name,
+          phone:user.phoneNumber,
+          referral:ref || "",
+          createdAt:firebase.firestore.FieldValue.serverTimestamp()
+        });
+      }
+      alert("✅ Login successful!");
+    }).catch(e=>alert("Invalid OTP"));
+  }
+
+  function logoutUser(){
+    auth.signOut();
+  }
+
+  // ✅ Dashboard Game Grid
+  const games = {
+    wingo: [
+      { name: "Win Go 30s", icon: "fa-clock" },
+      { name: "Win Go 1Min", icon: "fa-stopwatch" },
+      { name: "Win Go 3Min", icon: "fa-history" },
+      { name: "Win Go 5Min", icon: "fa-hourglass-half" }
+    ],
+    trx: [
+      { name: "Trx Win Go 30s", icon: "fa-random" },
+      { name: "Trx Win Go 1Min", icon: "fa-bolt" },
+      { name: "Trx Win Go 3Min", icon: "fa-sync" },
+      { name: "Trx Win Go 5Min", icon: "fa-rocket" }
+    ],
+    k3: [
+      { name: "K3 1Min", icon: "fa-dice-one" },
+      { name: "K3 5Min", icon: "fa-dice-five" },
+      { name: "K3 10Min", icon: "fa-dice-six" }
+    ]
+  };
+
+  function switchTab(element, category) {
+    document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+    element.classList.add('active');
+    const gameGrid = document.getElementById('gameGrid');
+    gameGrid.innerHTML = '';
+    let allGames = [];
+    if (category === 'all') {
+      allGames = [...games.wingo, ...games.trx, ...games.k3];
+    } else {
+      allGames = games[category];
+    }
+    allGames.forEach(game => {
+      const card = document.createElement('div');
+      card.className = 'game-card';
+      card.innerHTML = `<i class="fas ${game.icon}"></i><div class="game-title">${game.name}</div>`;
+      card.onclick = () => {
+        if (game.name.toLowerCase().includes("win go 30s")) {
+          window.location.href = "winGo.html";
+        } else {
+          alert(`Page for "${game.name}" not ready yet.`);
+        }
+      };
+      gameGrid.appendChild(card);
+    });
+  }
+
+  function switchNav(element) {
+    document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+    element.classList.add('active');
+    const navText = element.innerText.trim().toLowerCase();
+    if (navText.includes("home")) {
+      window.location.href = "index.html";
+    } else if (navText.includes("activity")) {
+      window.location.href = "activity.html";
+    } else if (navText.includes("promotion")) {
+      window.location.href = "promotion.html";
+    } else if (navText.includes("wallet")) {
+      window.location.href = "wallet.html";
+    } else if (navText.includes("account")) {
+      window.location.href = "account.html";
+    }
+  }
+
+  window.onload = () => {
+    switchTab(document.querySelector('.tab.active'), 'all');
+  };
+</script>
+</body>
+</html>
