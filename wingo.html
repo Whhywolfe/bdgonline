@@ -211,13 +211,10 @@ db.ref("results/30s").limitToLast(1).on("child_added", async (snap) => {
     let payout = 0;
 
     // ✅ जीतने का condition check (color, size, या exact number)
-    if (
-      bet.selection === result.color || 
-      bet.selection === result.size || 
-      bet.selection === result.number.toString()
-    ) {
-      won = true;
-      payout = bet.amount * 2;  // अभी simple 2x payout
+    if (bet.selection === result.number.toString()) {
+  payout = bet.amount * 8; // number पर 8x
+} else if (bet.selection === result.color || bet.selection === result.size) {
+  payout = bet.amount * 2; // color/size पर 2x
     }
 
     if (won) {
