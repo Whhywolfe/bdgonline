@@ -201,25 +201,26 @@ db.ref("results/30s").limitToLast(1).on("child_added", async (snap) => {
     .get();
 
   betsSnap.forEach(async betDoc => {
-    const bet = betDoc.data();
+  const bet = betDoc.data();
 
-    let won = false;
-    let payout = 0;
+  let won = false;
+  let payout = 0;
 
-    // ✅ जीतने का condition check (color, size, या exact number)
-    if (bet.selection === result.number.toString()) {
-  payout = bet.amount * 8; // number पर 8x
-} else if (bet.selection === result.color || bet.selection === result.size) {
-  payout = bet.amount * 2; // color/size पर 2x
-    }
+  // ✅ जीतने का condition check (color, size, या exact number)
+  if (bet.selection === result.number.toString()) {
+    payout = bet.amount * 8; // number पर 8x
+    won = true;
+  } else if (bet.selection === result.color || bet.selection === result.size) {
+    payout = bet.amount * 2; // color/size पर 2x
+    won = true;
+  }
 
-    if (won) {
-      await updateWinningBalance(payout);
-      showNotif("win", `🎉 You won ₹${payout} in period ${period}`);
-    } else {
-      showNotif("lose", `❌ Lost in period ${period}`);
-    }
-  });
+  if (won) {
+    await updateWinningBalance(payout);
+    showNotif("win", `🎉 You won ₹${payout} in period ${period}`);
+  } else {
+    showNotif("lose", `❌ Lost in period ${period}`);
+  }
 });
 // ✅ Render last 5 results on top
 function renderLastResults(){
