@@ -197,7 +197,19 @@ db.ref("results/30s").limitToLast(50).on("value", snap=>{
   renderPage(0);
   renderLastResults();
 });
+// ✅ Last Results Render
+function renderLastResults(){
+  const lastDiv = document.getElementById("lastResults");
+  lastDiv.innerHTML = "";
 
+  // सिर्फ 5 recent result दिखाओ
+  historyCache.slice(0,5).forEach(r=>{
+    const span = document.createElement("span");
+    span.innerText = r.number;
+    span.className = r.color.toLowerCase(); // green / red / violet
+    lastDiv.appendChild(span);
+  });
+}
 // ✅ Bet Buttons Disable/Enable
 function disableBetButtons(disable){
   document.querySelectorAll(".bet-buttons button, .big-small-buttons button, .number-ball").forEach(btn=>{
@@ -356,6 +368,41 @@ for(let i=0;i<=9;i++){
   else{ball.classList.add("green-ring");}
   ball.onclick=()=>openBetModal(i.toString(),"8x");
   if(i<5)topRow.appendChild(ball); else bottomRow.appendChild(ball);
+}
+  let currentPage = 0;
+const perPage = 10;
+let historyCache = [];
+
+function renderPage(page){
+  currentPage = page;
+  const tbody = document.querySelector("#gameHistory tbody");
+  tbody.innerHTML = "";
+
+  const start = page * perPage;
+  const slice = historyCache.slice(start, start + perPage);
+
+  slice.forEach(item=>{
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${item.period}</td>
+      <td>${item.number}</td>
+      <td>${item.size}</td>
+      <td style="color:${item.color.toLowerCase()}">${item.color}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function nextPage(){
+  if((currentPage+1) * perPage < historyCache.length){
+    renderPage(currentPage+1);
+  }
+}
+
+function prevPage(){
+  if(currentPage > 0){
+    renderPage(currentPage-1);
+  }
 }
 </script>
 </body>
