@@ -162,16 +162,14 @@
       loadPaymentDetails();
     });
 
-    async function loadWalletBalance() {
-      const doc = await firestore.collection("users").doc(currentUser.uid).get();
-      if (doc.exists) {
-        const data = doc.data();
-        const mainBal = data.balance || 0;
-        document.getElementById("balance").innerText = `₹${mainBal.toFixed(2)}`;
-        document.getElementById("mainWallet").innerText = `₹${mainBal.toFixed(2)}`;
-        document.getElementById("thirdWallet").innerText = `₹0.00`;
-      }
-    }
+    function loadWalletBalance() {
+  rtdb.ref(`users/${currentUser.uid}/balance`).on("value", snap => {
+    const bal = snap.val() || 0;
+    document.getElementById("balance").innerText = `₹${bal.toFixed(2)}`;
+    document.getElementById("mainWallet").innerText = `₹${bal.toFixed(2)}`;
+    document.getElementById("thirdWallet").innerText = `₹0.00`;
+  });
+}
 
     // ✅ Admin Panel से live payment details load
     function loadPaymentDetails() {
