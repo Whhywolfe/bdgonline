@@ -163,13 +163,9 @@ auth.onAuthStateChanged((user) => {
   userId = user.uid;
 
   // ✅ Live wallet listener
-  firestore.collection("users").doc(userId)
-    .onSnapshot(doc => {
-      if (doc.exists) {
-        currentWallet = doc.data().balance || 0;
-        refreshWallet();  // UI तुरन्त अपडेट होगा
-      }
-    });
+  db.ref("users/" + userId + "/balance").on("value", snap => {
+  currentWallet = snap.val() || 0;
+  refreshWallet();  // UI तुरंत update होगा
 });
 
 // ✅ Timer + period always from backend
@@ -291,9 +287,8 @@ async function submitBet(){
   const amount=parseFloat(document.getElementById("betAmount").value);
   if(isNaN(amount)||amount<=0){alert("Enter valid amount");return;}
   if(amount>currentWallet){alert("Not enough balance");return;}
-  currentWallet-=amount;
-  refreshWallet();
-  await firestore.collection("users").doc(userId).update({balance:currentWallet});
+  const newBalance = currentWallet - amount;
+await db.ref("users/" + userId + "/balance").set(newBalance);
   await firestore.collection("users").doc(userId).collection("bets").add({
     period:currentPeriod,selection:selectedBet,amount:amount,timestamp:Date.now(),game:"30s"
   });
@@ -302,14 +297,10 @@ async function submitBet(){
 }
 // ✅ Winning amount add करने के लिए function
 async function updateWinningBalance(winAmount) {
-  const userRef = firestore.collection("users").doc(userId);
-  return firestore.runTransaction(async (transaction) => {
-    const doc = await transaction.get(userRef);
-    if (!doc.exists) return;
-    const current = doc.data().balance || 0;
-    const newBalance = current + winAmount;
-    transaction.update(userRef, { balance: newBalance });
-  });
+  const ref = db.ref("users/" + userId + "/balance");
+  const snap = await ref.get();
+  const current = snap.val() || 0;
+  await ref.set(current + winAmount);
 }
 // ✅ Simple notif
 function showNotif(type,msg){
