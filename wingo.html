@@ -192,7 +192,42 @@ db.ref("results/30s").limitToLast(50).on("value", snap=>{
   renderPage(0);
   renderLastResults();
 });
+// ✅ सिर्फ नया result आने पर payout check करो
+db.ref("results/30s").limitToLast(1).on("child_added", async (snap) => {
+  const period = snap.key;
+  const result = snap.val();
 
+  // इस user का उसी period में bet check करो
+  const betsSnap = await firestore.collection("users")
+    .doc(userId)
+    .collection("bets")
+    .where("period", "==", period)
+    .get();
+
+  betsSnap.forEach(async betDoc => {
+    const bet = betDoc.data();
+
+    let won = false;
+    let payout = 0;
+
+    // ✅ जीतने का condition check (color, size, या exact number)
+    if (
+      bet.selection === result.color || 
+      bet.selection === result.size || 
+      bet.selection === result.number.toString()
+    ) {
+      won = true;
+      payout = bet.amount * 2;  // अभी simple 2x payout
+    }
+
+    if (won) {
+      await updateWinningBalance(payout);
+      showNotif("win", `🎉 You won ₹${payout} in period ${period}`);
+    } else {
+      showNotif("lose", `❌ Lost in period ${period}`);
+    }
+  });
+});
 // ✅ Render last 5 results on top
 function renderLastResults(){
   const lastResultsEl=document.getElementById("lastResults");
@@ -268,7 +303,17 @@ async function submitBet(){
   document.getElementById("betModal").style.display="none";
   showNotif("win","✅ Bet placed for "+currentPeriod);
 }
-
+// ✅ Winning amount add करने के लिए function
+async function updateWinningBalance(winAmount) {
+  const userRef = firestore.collection("users").doc(userId);
+  return firestore.runTransaction(async (transaction) => {
+    const doc = await transaction.get(userRef);
+    if (!doc.exists) return;
+    const current = doc.data().balance || 0;
+    const newBalance = current + winAmount;
+    transaction.update(userRef, { balance: newBalance });
+  });
+}
 // ✅ Simple notif
 function showNotif(type,msg){
   const cont=document.getElementById("notifContainer");
