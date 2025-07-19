@@ -179,12 +179,12 @@
       rtdb.ref("paymentSettings").on("value", snap => {
         const data = snap.val() || {};
         document.getElementById("paymentDetails").innerHTML = `
-          <b>Payment Details:</b><br>
-          <b>UPI:</b> ${data.upi || '-'}<br>
-          <b>Bank:</b> ${data.bankName || '-'}<br>
-          <b>Account:</b> ${data.accountNumber || '-'}<br>
-          <b>IFSC:</b> ${data.ifsc || '-'}
-        `;
+  <b>Payment Details:</b><br>
+  <b>Account:</b> ${data.accountNumber || '-'}<br>
+  <b>Bank:</b> ${data.bankName || '-'}<br>
+  <b>IFSC:</b> ${data.ifsc || '-'}<br>
+  <b>UPI:</b> ${data.upi || '-'}
+`;
       });
     }
 
