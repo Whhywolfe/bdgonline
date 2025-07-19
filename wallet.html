@@ -80,7 +80,6 @@
     </div>
     <input id="depositAmount" type="number" min="1" placeholder="Enter Amount" required />
     <input id="depositUtr" type="text" placeholder="Enter UTR Number" required />
-    <input id="depositScreenshot" type="file" accept="image/*" required />
     <button onclick="submitDeposit()">Submit Deposit</button>
     <p id="depositMsg" style="color:lightgreen;"></p>
   </div>
@@ -188,42 +187,37 @@
       });
     }
 
-    // ✅ Deposit Request Submit + Screenshot Upload
-    async function submitDeposit() {
-      const amount = parseFloat(document.getElementById("depositAmount").value);
-      const utr = document.getElementById("depositUtr").value.trim();
-      const file = document.getElementById("depositScreenshot").files[0];
-      const msg = document.getElementById("depositMsg");
+    // ✅ Deposit Request बिना screenshot
+async function submitDeposit() {
+  const amount = parseFloat(document.getElementById("depositAmount").value);
+  const utr = document.getElementById("depositUtr").value.trim();
+  const msg = document.getElementById("depositMsg");
 
-      if (!amount || !utr || !file) {
-        msg.style.color = "red"; msg.innerText = "Please fill all fields!"; return;
-      }
+  if (!amount || !utr) {
+    msg.style.color = "red";
+    msg.innerText = "Please enter amount & UTR!";
+    return;
+  }
 
-      msg.style.color = "yellow"; msg.innerText = "Uploading screenshot...";
+  msg.style.color = "yellow";
+  msg.innerText = "Submitting deposit request...";
 
-      const storageRef = storage.ref(`deposits/${currentUser.uid}/${Date.now()}_${file.name}`);
-      await storageRef.put(file);
-      const screenshotUrl = await storageRef.getDownloadURL();
+  const depositData = {
+    uid: currentUser.uid,
+    email: currentUser.email,
+    amount,
+    utr,
+    status: "pending",
+    createdAt: Date.now()
+  };
 
-      const depositData = {
-        uid: currentUser.uid,
-        email: currentUser.email,
-        amount,
-        utr,
-        screenshot: screenshotUrl,
-        status: "pending",
-        createdAt: Date.now()
-      };
+  await rtdb.ref("depositRequests").push(depositData);
 
-      // ✅ RTDB में Save ताकि Admin Panel पर दिखे
-      await rtdb.ref("depositRequests").push(depositData);
-
-      msg.style.color = "lightgreen";
-      msg.innerText = "✅ Deposit request submitted!";
-      document.getElementById("depositAmount").value = "";
-      document.getElementById("depositUtr").value = "";
-      document.getElementById("depositScreenshot").value = "";
-    }
+  msg.style.color = "lightgreen";
+  msg.innerText = "✅ Deposit request submitted!";
+  document.getElementById("depositAmount").value = "";
+  document.getElementById("depositUtr").value = "";
+}
 
     // ✅ Withdraw Request Submit
     async function submitWithdraw() {
