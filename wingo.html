@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>BDG GAME - WinGo 30s</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    body {margin:0;font-family:'Outfit',sans-serif;background:#0d0d0d;color:#fff;}
+    header{background:#1a1a1a;padding:12px 0;border-bottom:2px solid #FFD700;text-align:center;}
+    .logo{font-size:24px;font-weight:bold;color:#FFD700;}
+    .wallet-bar{background:#111;padding:12px;text-align:center;}
+    .wallet-top{display:flex;justify-content:center;align-items:center;}
+    .wallet-amount{font-size:24px;font-weight:bold;}
+    .wallet-refresh{margin-left:10px;cursor:pointer;color:#FFD700;font-size:20px;}
+    .wallet-balance{color:#aaa;font-size:14px;margin-top:4px;}
+    .game-header{display:flex;justify-content:space-between;padding:10px 16px;align-items:center;}
+    .game-name{color:#FFD700;font-size:18px;font-weight:bold;}
+    .last-results span{display:inline-block;width:30px;height:30px;line-height:30px;border-radius:50%;margin:0 2px;text-align:center;font-weight:bold;}
+    .green{background:green;} .red{background:red;} .violet{background:purple;}
+    .time-label{color:#aaa;font-size:13px;} .timer{font-size:22px;font-weight:bold;} .period{font-size:12px;color:#777;}
+    .bet-buttons,.big-small-buttons{display:flex;justify-content:space-between;margin:10px 16px;}
+    .bet-buttons button,.big-small-buttons button{flex:1;margin:0 5px;padding:10px;border:none;border-radius:6px;font-weight:bold;cursor:pointer;font-size:16px;color:#fff;}
+    .green-btn{background:green;} .violet-btn{background:purple;} .red-btn{background:red;} .big-btn{background:orange;color:#000;} .small-btn{background:#007bff;}
+    .number-row{display:flex;justify-content:space-around;margin:10px;gap:10px;}
+    .number-ball{width:60px;height:60px;border-radius:50%;line-height:60px;text-align:center;font-weight:bold;font-size:22px;background:#fff;color:#000;position:relative;cursor:pointer;}
+    .number-ball.red-ring{border:4px solid red;box-shadow:0 0 10px rgba(255,0,0,0.5);}
+    .number-ball.green-ring{border:4px solid green;box-shadow:0 0 10px rgba(0,255,0,0.5);}
+    .number-ball.zero-ring{border:4px solid transparent;background:#fff;background-clip:padding-box;position:relative;}
+    .number-ball.zero-ring::before{content:"";position:absolute;top:-4px;left:-4px;right:-4px;bottom:-4px;border-radius:50%;background:conic-gradient(red,purple,green,red);z-index:-1;}
+    .random-box{margin:16px auto;border:2px solid red;padding:10px;max-width:300px;text-align:center;border-radius:8px;}
+    .random-box span{display:inline-block;background:#222;color:#FFD700;padding:6px 10px;border-radius:6px;margin:4px;font-weight:bold;}
+    .history-section{margin:10px;}
+    .toggle-btns{display:flex;justify-content:center;gap:10px;margin-bottom:10px;}
+    .toggle-btns button{background:#FFD700;border:none;padding:6px 12px;border-radius:6px;font-weight:bold;cursor:pointer;}
+    .history-table{width:100%;border-collapse:collapse;font-size:14px;}
+    .history-table th,.history-table td{border:1px solid #333;padding:6px;text-align:center;}
+    .history-table th{background:#222;color:#FFD700;} .history-table td{background:#111;}
+    .pagination{display:flex;justify-content:center;gap:10px;margin-top:10px;}
+    .pagination button{background:#FFD700;border:none;padding:6px 12px;border-radius:6px;font-weight:bold;cursor:pointer;}
+    .modal{position:fixed;bottom:0;left:0;right:0;background:#1a1a1a;border-top:2px solid #FFD700;padding:20px;display:none;flex-direction:column;z-index:1000;}
+    .modal h2{text-align:center;color:#FFD700;}
+    .modal label{margin-top:10px;display:block;}
+    .modal input{width:100%;padding:8px;margin-top:4px;border-radius:6px;border:none;font-size:16px;}
+    .modal button{margin-top:12px;background:#FFD700;padding:10px;border:none;border-radius:6px;font-weight:bold;cursor:pointer;}
+    .notification-container{position:fixed;top:10px;right:10px;z-index:2000;display:flex;flex-direction:column;gap:8px;}
+    .notification{background:#222;color:#fff;padding:10px 16px;border-radius:8px;min-width:220px;opacity:0;transform:translateY(-20px);transition:all 0.4s ease;box-shadow:0 4px 10px rgba(0,0,0,0.4);}
+    .notification.show{opacity:1;transform:translateY(0);} .notification.win{border-left:4px solid limegreen;} .notification.lose{border-left:4px solid crimson;}
+  </style>
+</head>
+<body>
+
+<header><div class="logo">BDG GAME</div></header>
+
+<div class="wallet-bar">
+  <div class="wallet-top">
+    <span class="wallet-amount" id="walletAmount">₹0.00</span>
+    <span class="wallet-refresh" onclick="refreshWallet()">⟳</span>
+  </div>
+  <div class="wallet-balance">Wallet Balance</div>
+</div>
+
+<div class="game-header">
+  <div>
+    <div class="game-name">WinGo 30sec</div>
+    <div class="last-results" id="lastResults"></div>
+  </div>
+  <div>
+    <div class="time-label">Time Remaining</div>
+    <div class="timer" id="timer">00:30</div>
+    <div class="period" id="period">--</div>
+  </div>
+</div>
+
+<div class="bet-buttons">
+  <button class="green-btn" onclick="openBetModal('Green','1.98x')">Green</button>
+  <button class="violet-btn" onclick="openBetModal('Violet','1.98x')">Violet</button>
+  <button class="red-btn" onclick="openBetModal('Red','1.98x')">Red</button>
+</div>
+
+<div class="number-row" id="topRow"></div>
+<div class="number-row" id="bottomRow"></div>
+
+<div class="random-box">
+  Random<br/>
+  <span>1x</span><span>5x</span><span>10x</span><span>20x</span><span>50x</span>
+</div>
+
+<div class="big-small-buttons">
+  <button class="big-btn" onclick="openBetModal('Big','1.98x')">Big</button>
+  <button class="small-btn" onclick="openBetModal('Small','1.98x')">Small</button>
+</div>
+
+<div class="history-section">
+  <div class="toggle-btns">
+    <button onclick="toggleHistory('game')">Game History</button>
+    <button onclick="toggleHistory('bet')">My Bet History</button>
+  </div>
+  <div id="gameHistoryDiv">
+    <table class="history-table" id="gameHistory">
+      <thead><tr><th>Period</th><th>Number</th><th>Big/Small</th><th>Color</th></tr></thead>
+      <tbody></tbody>
+    </table>
+    <div class="pagination">
+      <button onclick="prevPage()">Prev</button>
+      <button onclick="nextPage()">Next</button>
+    </div>
+  </div>
+  <div id="betHistoryDiv" style="display:none;">
+    <table class="history-table" id="betHistory">
+      <thead><tr><th>Period</th><th>Your Bet</th><th>Result</th><th>Payout</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</div>
+
+<div class="modal" id="betModal">
+  <h2>WinGo 30sec</h2>
+  <div>Wallet Balance: <span id="modalWallet">₹0.00</span></div>
+  <div>Your Selection: <strong id="selectedValue">-</strong></div>
+  <div>Period: <span id="selectedPeriod"></span></div>
+  <label>Enter Amount:</label>
+  <input type="number" id="betAmount" placeholder="Enter amount">
+  <button onclick="submitBet()">Submit</button>
+</div>
+
+<div class="notification-container" id="notifContainer"></div>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyCNrrHD6S8540Rbd7iyqP1fPk6Wc7NpQCg",
+  authDomain: "bdgonline-a20f8.firebaseapp.com",
+  databaseURL: "https://bdgonline-a20f8-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "bdgonline-a20f8",
+  storageBucket: "bdgonline-a20f8.appspot.com",
+  messagingSenderId: "783742260288",
+  appId: "1:783742260288:web:bc8de084be768dedee7ba5"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const auth = firebase.auth();
+const firestore = firebase.firestore();
+
+let userId = null;
+let currentWallet = 0;
+let selectedBet = null;
+let currentPeriod = null;
+let historyCache = [];
+let currentPage = 0;
+const pageSize = 10;
+
+// ✅ Auth check
+auth.onAuthStateChanged(async (user)=>{
+  if(!user){window.location.href="login.html";return;}
+  userId=user.uid;
+  const doc=await firestore.collection("users").doc(userId).get();
+  currentWallet = doc.exists ? (doc.data().balance||0):0;
+  refreshWallet();
+});
+
+// ✅ Timer + period always from backend
+db.ref("globalGame/30s").on("value", snap=>{
+  if(!snap.exists()) return;
+  const d=snap.val();
+  document.getElementById("timer").innerText="00:"+(d.remaining<10?"0":"")+d.remaining;
+  document.getElementById("period").innerText=d.currentPeriod;
+  currentPeriod=d.currentPeriod;
+});
+
+// ✅ Listen last 50 results
+db.ref("results/30s").limitToLast(50).on("value", snap=>{
+  historyCache=[];
+  const data=snap.val()||{};
+  const keys=Object.keys(data).sort().reverse(); 
+  keys.forEach(k=>{
+    historyCache.push({period:k,...data[k]});
+  });
+  renderPage(0);
+  renderLastResults();
+});
+
+// ✅ Render last 5 results on top
+function renderLastResults(){
+  const lastResultsEl=document.getElementById("lastResults");
+  lastResultsEl.innerHTML="";
+  historyCache.slice(0,5).forEach(h=>{
+    const span=document.createElement("span");
+    span.className=h.color.toLowerCase();
+    span.innerText=h.number;
+    lastResultsEl.appendChild(span);
+  });
+}
+
+// ✅ Pagination rendering
+function renderPage(page){
+  currentPage=page;
+  const tableBody=document.querySelector("#gameHistory tbody");
+  tableBody.innerHTML="";
+  const start=page*pageSize;
+  const end=start+pageSize;
+  historyCache.slice(start,end).forEach(h=>{
+    const tr=document.createElement("tr");
+    tr.innerHTML=`<td>${h.period}</td><td>${h.number}</td><td>${h.size}</td><td>${h.color}</td>`;
+    tableBody.appendChild(tr);
+  });
+}
+function nextPage(){ if((currentPage+1)*pageSize < historyCache.length) renderPage(currentPage+1);}
+function prevPage(){ if(currentPage>0) renderPage(currentPage-1); }
+
+// ✅ Number buttons
+const topRow=document.getElementById("topRow"), bottomRow=document.getElementById("bottomRow");
+for(let i=0;i<=9;i++){
+  const ball=document.createElement("div");
+  ball.className="number-ball";
+  ball.innerText=i;
+  if(i===0){ball.classList.add("zero-ring");}
+  else if(i%2===0){ball.classList.add("red-ring");}
+  else{ball.classList.add("green-ring");}
+  ball.onclick=()=>openBetModal(i.toString(),"8x");
+  if(i<5)topRow.appendChild(ball); else bottomRow.appendChild(ball);
+}
+
+// ✅ Wallet refresh
+function refreshWallet(){
+  document.getElementById("walletAmount").innerText="₹"+currentWallet.toFixed(2);
+}
+
+// ✅ Toggle history
+function toggleHistory(type){
+  document.getElementById("gameHistoryDiv").style.display=(type==="game")?"block":"none";
+  document.getElementById("betHistoryDiv").style.display=(type==="bet")?"block":"none";
+}
+
+// ✅ Betting modal
+function openBetModal(val,payout){
+  selectedBet=val;
+  document.getElementById("selectedValue").innerText=`${val} (Payout ${payout})`;
+  document.getElementById("selectedPeriod").innerText=currentPeriod;
+  document.getElementById("modalWallet").innerText="₹"+currentWallet.toFixed(2);
+  document.getElementById("betAmount").value="";
+  document.getElementById("betModal").style.display="flex";
+}
+
+async function submitBet(){
+  const amount=parseFloat(document.getElementById("betAmount").value);
+  if(isNaN(amount)||amount<=0){alert("Enter valid amount");return;}
+  if(amount>currentWallet){alert("Not enough balance");return;}
+  currentWallet-=amount;
+  refreshWallet();
+  await firestore.collection("users").doc(userId).update({balance:currentWallet});
+  await firestore.collection("users").doc(userId).collection("bets").add({
+    period:currentPeriod,selection:selectedBet,amount:amount,timestamp:Date.now(),game:"30s"
+  });
+  document.getElementById("betModal").style.display="none";
+  showNotif("win","✅ Bet placed for "+currentPeriod);
+}
+
+// ✅ Simple notif
+function showNotif(type,msg){
+  const cont=document.getElementById("notifContainer");
+  const div=document.createElement("div");
+  div.className=`notification ${type}`;
+  div.innerText=msg;
+  cont.appendChild(div);
+  setTimeout(()=>div.classList.add("show"),50);
+  setTimeout(()=>{div.classList.remove("show");setTimeout(()=>cont.removeChild(div),400);},3000);
+}
+</script>
+</body>
+</html>
